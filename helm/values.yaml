@@ -1,0 +1,146 @@
+# ══════════════════════════════════════════════════════════════
+# Unio Umbrella Helm Chart — values.yaml
+# Override per-service values here.
+# ══════════════════════════════════════════════════════════════
+
+# Global settings applied to all sub-charts
+global:
+  imageRegistry: ""          # e.g. "123456789.dkr.ecr.us-east-1.amazonaws.com"
+  imagePullPolicy: IfNotPresent
+  namespace: unio-prod
+
+# ─── Round 1: User Metadata Service ──────────────────────────
+user-service:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: unio/user-service
+    tag: "1.0.0"
+  service:
+    port: 54321
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  env:
+    PORT: "54321"
+    DB_HOST: "mysql"
+    DB_NAME: "user_db"
+    DB_USER: "root"
+    DB_PASS: "password"
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    cpuUtilization: 70
+  livenessProbe:
+    path: /metrics
+    port: 54321
+  readinessProbe:
+    path: /metrics
+    port: 54321
+
+# ─── Round 2: IDP Backend ─────────────────────────────────────
+idp-service:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: unio/idp-service
+    tag: "1.0.0"
+  service:
+    port: 4001
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  env:
+    PORT: "4001"
+  hpa:
+    enabled: false
+  livenessProbe:
+    path: /dashboard
+    port: 4001
+
+# ─── Round 3: K8s Topology & SLO API ─────────────────────────
+k8s-slo-service:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: unio/k8s-slo-service
+    tag: "1.0.0"
+  service:
+    port: 4002
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  env:
+    PORT: "4002"
+  hpa:
+    enabled: false
+  livenessProbe:
+    path: /slo
+    port: 4002
+
+# ─── Round 4: Security & Compliance API ──────────────────────
+security-service:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: unio/security-service
+    tag: "1.0.0"
+  service:
+    port: 4003
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  env:
+    PORT: "4003"
+  hpa:
+    enabled: false
+  livenessProbe:
+    path: /compliance
+    port: 4003
+
+# ─── Showcase Dashboard ───────────────────────────────────────
+dashboard:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: unio/dashboard
+    tag: "1.0.0"
+  service:
+    port: 8080
+    type: LoadBalancer      # Expose externally via cloud LB
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  hpa:
+    enabled: false
+
+# ─── MySQL (optional, for Round 1 persistence) ───────────────
+mysql:
+  enabled: true
+  image: mysql:8.0
+  rootPassword: password
+  database: user_db
+  persistence:
+    enabled: true
+    size: 5Gi

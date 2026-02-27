@@ -1,0 +1,28 @@
+replicaCount: 3
+
+image:
+  repository: myrepo/user-metadata-service
+  pullPolicy: IfNotPresent
+  tag: "v1.0.0"
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+hpa:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  cpuUtilization: 70
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,26 @@
+{
+    "name": "round-4-security-design",
+    "version": "1.0.0",
+    "description": "Security & Compliance API backend",
+    "main": "index.js",
+    "scripts": {
+        "start": "ts-node src/index.ts",
+        "dev": "nodemon src/index.ts"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "dependencies": {
+        "@fastify/cors": "^11.2.0",
+        "fastify": "^5.7.4",
+        "uuid": "^13.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^25.3.0",
+        "@types/uuid": "^10.0.0",
+        "nodemon": "^3.1.14",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.9.3"
+    }
+}

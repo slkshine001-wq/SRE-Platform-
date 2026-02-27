@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unio - Unified Platform Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0c10;
+            --bg-card: #161b22;
+            --accent: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.3);
+            --text-main: #c9d1d9;
+            --text-dim: #8b949e;
+            --success: #3fb950;
+            --warning: #d29922;
+            --danger: #f85149;
+            --glass: rgba(22, 27, 34, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Navbar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #58a6ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Sidebar Tabs */
+        .layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .tab {
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-dim);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .tab:hover {
+            background: #21262d;
+            color: var(--text-main);
+        }
+
+        .tab.active {
+            background: var(--accent-glow);
+            color: var(--accent);
+            border-left: 3px solid var(--accent);
+        }
+
+        /* Dashboard Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cards and Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        .card-title {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Status Pills */
+        .pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .pill-success {
+            background: rgba(63, 185, 80, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .pill-warning {
+            background: rgba(210, 153, 34, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        /* Live Visualization */
+        .visualizer-container {
+            height: 350px;
+            background: #0d1117;
+            border-radius: 12px;
+            position: relative;
+            border: 1px solid #30363d;
+            margin-top: 1rem;
+            padding: 1rem;
+        }
+
+        #chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .terminal-log {
+            height: 150px;
+            background: #050505;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            color: #4ef037;
+            overflow-y: auto;
+            border: 1px solid #333;
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .log-line {
+            line-height: 1.4;
+            animation: slideIn 0.2s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Document Viewer */
+        .doc-viewer {
+            background: #0d1117;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+
+        pre {
+            background: #161b22;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            color: #d1d5da;
+            margin: 1rem 0;
+            border: 1px solid #30363d;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #fff;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #79c0ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav>
+            <div class="logo">UNIO CLOUD</div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <span class="pill pill-success">
+                    <div class="pulse"></div>System Online
+                </span>
+                <span style="color: var(--text-dim)">v1.2.0</span>
+            </div>
+        </nav>
+
+        <div class="layout">
+            <aside class="tabs">
+                <div class="tab active" onclick="showSection('round1')">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                        <path
+                            d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                    Microservice Health
+                </div>
+                <div class="tab" onclick="showSection('round1_mgmt')">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z" />
+                    </svg>
+                    User Management
+                </div>
+                <div class="tab" onclick="showSection('round2')">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M5.5 2A1.5 1.5 0 0 0 4 3.5v1.1c-.3.3-.5.7-.5 1.1s.2.8.5 1.1v1.1A1.5 1.5 0 0 0 5.5 10H6v1.5a1.5 1.5 0 0 0 1.5 1.5H9a1 1 0 0 0 1-1V10h.5A1.5 1.5 0 0 0 12 8.5V7.4c.3-.3.5-.7.5-1.1s-.2-.8-.5-1.1V4.1A1.5 1.5 0 0 0 10.5 3H10V1.5A1.5 1.5 0 0 0 8.5 0H7a1 1 0 0 0-1 1V2h-.5z" />
+                    </svg>
+                    Self-Service Portal
+                </div>
+                <div class="tab" onclick="showSection('round3')">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M6 14.5a6.7 6.7 0 0 1-3-1l-1 2 2 .5m4-1.5a6.7 6.7 0 0 0 3-1l1 2-2 .5m-9-5a6.7 6.7 0 0 1 1-3l-2-1-.5 2m11.5 2a6.7 6.7 0 0 0-1-3l2-1 .5 2" />
+                    </svg>
+                    K8s & Observability
+                </div>
+                <div class="tab" onclick="showSection('round4')">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4H4.2c-.1 0-.2.1-.2.2v7c0 .1.1.2.2.2h7.6c.1 0 .2-.1.2-.2v-7c0-.1-.1-.2-.2-.2H11z" />
+                    </svg>
+                    Security Comply
+                </div>
+            </aside>
+
+            <main>
+                <section id="round1" class="section active">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; border-bottom: 1px solid #30363d; padding-bottom: 1.5rem;">
+                        <div>
+                            <h2 style="margin-bottom: 0.5rem">User Metadata Service Status</h2>
+                            <div style="color: var(--text-dim); font-size: 0.9rem;">Real-time performance & audit
+                                monitoring</div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                            <div
+                                style="font-size: 0.75rem; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                                Global Time Filter</div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <select id="global-time-selector" onchange="handleGlobalTimeChange()"
+                                    style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; background: var(--bg-card); border: 1px solid #30363d; border-radius: 6px; color: #fff; cursor: pointer; outline: none;">
+                                    <option value="30000">Last 30 Seconds</option>
+                                    <option value="300000">Last 5 Minutes</option>
+                                    <option value="3600000">Last 1 Hour</option>
+                                    <option value="86400000">Last 24 Hours</option>
+                                    <option value="259200000">Last 3 Days</option>
+                                    <option value="custom-days">Custom Days</option>
+                                    <option value="date-range">Custom Date Range</option>
+                                </select>
+
+                                <div id="global-custom-days-container"
+                                    style="display: none; align-items: center; gap: 0.3rem;">
+                                    <input type="number" id="global-day-input" placeholder="Days"
+                                        style="width: 70px; padding: 0.5rem; font-size: 0.85rem; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #fff;">
+                                    <button onclick="applyGlobalCustomDays()"
+                                        style="padding: 0.5rem 0.8rem; font-size: 0.8rem; background: var(--accent); color: #000; border-radius: 4px; font-weight: 600; border: none; cursor: pointer;">Set</button>
+                                </div>
+
+                                <div id="global-date-range-container"
+                                    style="display: none; align-items: center; gap: 0.3rem;">
+                                    <input type="datetime-local" id="global-start-date"
+                                        style="width: auto; padding: 0.5rem; font-size: 0.8rem; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #fff;">
+                                    <span style="font-size: 0.8rem; color: var(--text-dim)">to</span>
+                                    <input type="datetime-local" id="global-end-date"
+                                        style="width: auto; padding: 0.5rem; font-size: 0.8rem; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #fff;">
+                                    <button onclick="applyGlobalDateRange()"
+                                        style="padding: 0.5rem 0.8rem; font-size: 0.8rem; background: var(--accent); color: #000; border-radius: 4px; font-weight: 600; border: none; cursor: pointer;">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div class="card">
+                            <div class="card-title">Success Rate</div>
+                            <div class="card-value" id="stat-success-rate">0%</div>
+                            <div style="color: var(--success); font-size: 0.8rem; margin-top: 0.5rem">Assignment Metric
+                                #4</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Avg Latency (MS)</div>
+                            <div class="card-value" id="stat-latency">0ms</div>
+                            <div style="color: var(--accent); font-size: 0.8rem; margin-top: 0.5rem">Assignment Metric
+                                #4</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Total Requests</div>
+                            <div class="card-value" id="stat-total">0</div>
+                            <div style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.5rem">Assignment Metric
+                                #4</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">System Uptime</div>
+                            <div class="card-value" id="stat-uptime" style="font-size: 1.5rem; margin-top: 0.5rem;">
+                                00:00:00</div>
+                            <div style="color: var(--success); font-size: 0.8rem; margin-top: 0.5rem">Online Since Start
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid" style="margin-top: 1.5rem">
+                        <div class="card">
+                            <div class="card-title">Successful Creations</div>
+                            <div class="card-value" style="color: var(--success)" id="stat-success-count">0</div>
+                            <div style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.5rem">POST /user (201)
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Failed Creations</div>
+                            <div class="card-value" style="color: var(--danger)" id="stat-failure-count">0</div>
+                            <div style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.5rem">Validation/DB
+                                Errors</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Request Types</div>
+                            <div id="method-distribution"
+                                style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                    <span style="color: var(--accent)">GET</span>
+                                    <span id="dist-get">0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                    <span style="color: var(--success)">POST</span>
+                                    <span id="dist-post">0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                    <span style="color: var(--warning)">OTHER</span>
+                                    <span id="dist-other">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top: 2rem">
+                        <div class="card-title" style="margin-bottom: 0;">System Request Throughput</div>
+                        <div class="visualizer-container">
+                            <div id="chart"></div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 1.5rem">
+                        <div class="card-title" style="margin-bottom: 0;">System Event Stream</div>
+                        <div class="terminal-log" id="log-stream">
+                            <div class="log-line">> Establishing secure connection to user-metadata-service...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- User Management Section (Round 1) -->
+                <section id="round1_mgmt" class="section">
+                    <h2 style="margin-bottom: 1.5rem">User Metadata Operations</h2>
+                    <div class="grid">
+                        <!-- Create User Form -->
+                        <div class="card">
+                            <h3>Create New User</h3>
+                            <div style="margin-top: 1rem">
+                                <div class="form-group">
+                                    <label>User ID</label>
+                                    <input type="text" id="post-userid" placeholder="e.g. u400">
+                                </div>
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="post-name" placeholder="John Doe">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="post-email" placeholder="john@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="text" id="post-phone" placeholder="+1-234-567-890">
+                                </div>
+                                <div class="form-group" style="display: flex; gap: 0.5rem; align-items: flex-end;">
+                                    <div style="flex: 1;">
+                                        <label>Idempotency Key</label>
+                                        <input type="text" id="post-ikey" placeholder="unique-key-123">
+                                    </div>
+                                    <button onclick="generateKey()" style="padding: 0.75rem; height: 42px;">🔄</button>
+                                </div>
+                                <div style="display: flex; gap: 1rem;">
+                                    <button onclick="apiCreateUser(event)" style="flex: 2;">Create User</button>
+                                    <button onclick="autoFill()"
+                                        style="flex: 1; background: #21262d; color: var(--text-main); border: 1px solid #30363d;">Auto-fill</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fetch User Form -->
+                        <div class="card">
+                            <h3>Fetch User Metadata</h3>
+                            <div style="margin-top: 1rem">
+                                <div class="form-group">
+                                    <label>Enter User ID</label>
+                                    <input type="text" id="get-userid" placeholder="e.g. u100">
+                                </div>
+                                <button onclick="apiGetUser(event)">Fetch Data</button>
+
+                                <div id="api-result-box" style="margin-top: 1.5rem; display: none;">
+                                    <label>Results</label>
+                                    <pre id="api-result"
+                                        style="font-size: 0.8rem; background: #0d1117; color: var(--accent); margin: 0;"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Round 2 Section -->
+                <section id="round2" class="section">
+                    <h2 style="margin-bottom: 1.5rem">Internal Developer Portal (IDP)</h2>
+                    <div class="grid" style="grid-template-columns: 1fr 1.5fr;">
+                        <div class="card">
+                            <h3>Scaffold New Microservice</h3>
+                            <div style="margin-top: 1.5rem">
+                                <div class="form-group">
+                                    <label>Service Name</label>
+                                    <input type="text" id="idp-svc-name" placeholder="e.g. order-processor">
+                                </div>
+                                <div class="form-group">
+                                    <label>Team Name</label>
+                                    <select id="idp-team-name">
+                                        <option value="FinTech-Ops">FinTech-Ops</option>
+                                        <option value="Growth-Core">Growth-Core</option>
+                                        <option value="Platform-Eng">Platform-Eng</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Git Repository URL</label>
+                                    <input type="text" id="idp-repo-url" placeholder="https://github.com/unio/svc">
+                                </div>
+                                <button id="btn-scaffold" onclick="apiRegisterService()">Bootstrap & Generate
+                                    Manifests</button>
+
+                                <div id="idp-actions"
+                                    style="display: none; margin-top: 1.5rem; border-top: 1px solid #30363d; padding-top: 1.5rem;">
+                                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem;">
+                                        Infrastructure Provisioned Successfully</div>
+                                    <div class="form-group">
+                                        <label>ECR Repository</label>
+                                        <code id="idp-ecr-out"
+                                            style="display: block; font-size: 0.7rem; color: var(--accent); background: #0d1117; padding: 0.5rem; border-radius: 4px; border: 1px solid #30363d;">...</code>
+                                    </div>
+                                    <button onclick="apiDeployService()"
+                                        style="background: var(--success); color: #000;">Trigger GitOps
+                                        Deployment</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h3 style="margin: 0;">Automated Scaffolding</h3>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button class="pill" style="padding: 0.3rem 0.6rem; font-size: 0.7rem;"
+                                        onclick="showManifest('k8s')">K8s</button>
+                                    <button class="pill" style="padding: 0.3rem 0.6rem; font-size: 0.7rem;"
+                                        onclick="showManifest('ci')">CI/CD</button>
+                                    <button class="pill" style="padding: 0.3rem 0.6rem; font-size: 0.7rem;"
+                                        onclick="showManifest('tf')">Terraform</button>
+                                </div>
+                            </div>
+                            <div class="doc-viewer" style="height: 350px; overflow-y: auto;">
+                                <pre id="idp-manifest-viewer"
+                                    style="font-size: 0.75rem; color: #8b949e;">// Manifests will appear here after bootstrapping...</pre>
+                            </div>
+
+                            <h3 style="margin-top: 1.5rem; margin-bottom: 1rem;">Recent Pipeline Runs</h3>
+                            <div id="idp-deployments" style="max-height: 150px; overflow-y: auto;">
+                                <div
+                                    style="color: var(--text-dim); font-size: 0.8rem; text-align: center; padding: 1rem; border: 1px dashed #30363d;">
+                                    No active deployments</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid" style="grid-template-columns: 2fr 1fr; margin-top: 1.5rem;">
+                        <div class="card">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h3 style="margin: 0;">CI/CD Console Output</h3>
+                                <span id="idp-console-status" class="pill" style="display: none;">IDLE</span>
+                            </div>
+                            <div class="terminal-log" id="idp-console-out"
+                                style="height: 250px; font-family: 'Courier New', Courier, monospace; font-size: 0.8rem; background: #010409; padding: 1rem; border-radius: 6px; overflow-y: auto;">
+                                <div class="log-line" style="color: #8b949e">> System ready. Waiting for deployment
+                                    trigger...</div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>Audit Logs</h3>
+                            <div id="idp-audit-logs"
+                                style="margin-top: 1rem; font-size: 0.8rem; max-height: 250px; overflow-y: auto;">
+                                <div style="color: var(--text-dim); padding: 0.5rem;">Waiting for activity...</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Round 3 Section -->
+                <section id="round3" class="section">
+                    <h2 style="margin-bottom: 0.5rem">K8s Topology &amp; SLO Management</h2>
+                    <div style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1.5rem;">Live cluster state ·
+                        Auto-refreshes every 3s</div>
+
+                    <!-- SLO KPI Row -->
+                    <div class="grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 1.5rem;">
+                        <div class="card" style="text-align:center;">
+                            <div class="card-title">Availability SLO</div>
+                            <div class="card-value" id="slo-availability" style="font-size:1.6rem;">—</div>
+                            <div id="slo-avail-target"
+                                style="font-size:0.75rem; color:var(--text-dim); margin-top:0.3rem;">Target: 99.9%</div>
+                            <span id="slo-avail-badge" class="pill"
+                                style="margin-top:0.5rem; display:inline-block; font-size:0.65rem;">—</span>
+                        </div>
+                        <div class="card" style="text-align:center;">
+                            <div class="card-title">Latency p95</div>
+                            <div class="card-value" id="slo-p95" style="font-size:1.6rem;">—</div>
+                            <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.3rem;">Target: &lt;200ms
+                            </div>
+                            <span id="slo-p95-badge" class="pill"
+                                style="margin-top:0.5rem; display:inline-block; font-size:0.65rem;">—</span>
+                        </div>
+                        <div class="card" style="text-align:center;">
+                            <div class="card-title">Latency p99</div>
+                            <div class="card-value" id="slo-p99" style="font-size:1.6rem;">—</div>
+                            <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.3rem;">Target: &lt;500ms
+                            </div>
+                            <span id="slo-p99-badge" class="pill"
+                                style="margin-top:0.5rem; display:inline-block; font-size:0.65rem;">—</span>
+                        </div>
+                        <div class="card" style="text-align:center;">
+                            <div class="card-title">Error Budget Policy</div>
+                            <div class="card-value" id="slo-policy" style="font-size:1.4rem; margin-top:0.5rem;">—</div>
+                            <div id="slo-policy-desc"
+                                style="font-size:0.75rem; color:var(--text-dim); margin-top:0.3rem;">—</div>
+                        </div>
+                    </div>
+
+                    <!-- Error Budget + Pod Topology -->
+                    <div class="grid" style="grid-template-columns: 1fr 2fr; margin-bottom: 1.5rem;">
+                        <!-- Error Budget Ring -->
+                        <div class="card"
+                            style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 2rem;">
+                            <div class="card-title" style="margin-bottom:1rem;">Error Budget Remaining</div>
+                            <div style="position:relative; width:160px; height:160px;">
+                                <svg viewBox="0 0 160 160" style="transform:rotate(-90deg);">
+                                    <circle cx="80" cy="80" r="65" fill="none" stroke="#21262d" stroke-width="14" />
+                                    <circle id="budget-ring" cx="80" cy="80" r="65" fill="none" stroke="var(--success)"
+                                        stroke-width="14" stroke-dasharray="408.41" stroke-dashoffset="0"
+                                        stroke-linecap="round"
+                                        style="transition: stroke-dashoffset 1s ease, stroke 0.5s ease;" />
+                                </svg>
+                                <div
+                                    style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center;">
+                                    <div id="budget-pct-display" style="font-size:1.8rem; font-weight:700; color:#fff;">
+                                        —</div>
+                                    <div style="font-size:0.7rem; color:var(--text-dim);">remaining</div>
+                                </div>
+                            </div>
+                            <div id="budget-minutes"
+                                style="margin-top:1rem; font-size:0.8rem; color:var(--text-dim); text-align:center;">—
+                            </div>
+                            <div
+                                style="display:flex; gap:0.5rem; margin-top:1.5rem; flex-wrap:wrap; justify-content:center;">
+                                <button onclick="r3SimulateIncident()"
+                                    style="background: var(--danger); color:#fff; padding:0.5rem 1rem; font-size:0.75rem;">💥
+                                    Inject Incident</button>
+                                <button onclick="r3SimulateScale()"
+                                    style="background: var(--accent); color:#000; padding:0.5rem 1rem; font-size:0.75rem;">⚡
+                                    Manual Scale-Out</button>
+                            </div>
+                        </div>
+
+                        <!-- Pod Topology Grid -->
+                        <div class="card">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <h3 style="margin:0;">Live Pod Topology</h3>
+                                <span style="font-size:0.75rem; color:var(--text-dim);">namespace: production</span>
+                            </div>
+                            <div id="pod-topology" style="display:flex; flex-direction:column; gap:0.75rem;">
+                                <div style="text-align:center; color:var(--text-dim); padding:2rem;">Loading cluster
+                                    state...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alert Timeline + Helm Chart Viewer -->
+                    <div class="grid" style="grid-template-columns: 1.2fr 1fr; margin-bottom: 1.5rem;">
+                        <!-- Alert Timeline -->
+                        <div class="card">
+                            <h3 style="margin-bottom:1rem;">Alert &amp; Event Timeline</h3>
+                            <div id="alert-timeline"
+                                style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem;">
+                                <div style="color:var(--text-dim); text-align:center; padding:1rem;">Loading alerts...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- K8s Production Manifest Viewer -->
+                        <div class="card">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <h3 style="margin:0;">Manifest Viewer</h3>
+                                <div style="display:flex; gap:0.4rem;">
+                                    <button class="pill" style="padding:0.3rem 0.6rem; font-size:0.7rem;"
+                                        onclick="r3ShowManifest('k8s')">K8s</button>
+                                    <button class="pill" style="padding:0.3rem 0.6rem; font-size:0.7rem;"
+                                        onclick="r3ShowManifest('helm')">Helm</button>
+                                    <button class="pill" style="padding:0.3rem 0.6rem; font-size:0.7rem;"
+                                        onclick="r3ShowManifest('hpa')">HPA</button>
+                                    <button class="pill" style="padding:0.3rem 0.6rem; font-size:0.7rem;"
+                                        onclick="r3ShowManifest('otel')">OTel</button>
+                                </div>
+                            </div>
+                            <div
+                                style="height:280px; overflow-y:auto; background:#010409; border-radius:6px; padding:1rem; border:1px solid #30363d;">
+                                <pre id="r3-manifest-viewer"
+                                    style="font-size:0.7rem; color:#8b949e; margin:0; white-space:pre-wrap;">// Select a manifest type above</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SLO Document Inline -->
+                    <div class="card">
+                        <h3 style="margin-bottom:1rem;">SLO Document — User Metadata Service</h3>
+                        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem;">
+                            <div style="background:#0d1117; border-radius:8px; padding:1rem; border:1px solid #30363d;">
+                                <div
+                                    style="color:var(--accent); font-size:0.75rem; font-weight:600; margin-bottom:0.5rem;">
+                                    AVAILABILITY SLI</div>
+                                <div style="font-size:0.85rem; color:var(--text-dim);">sum(rate(success_count[5m])) /
+                                    sum(rate(total_requests[5m]))</div>
+                                <div style="margin-top:0.5rem; font-size:0.8rem;">Target: <strong
+                                        style="color:var(--success)">99.9%</strong> / 30 days</div>
+                            </div>
+                            <div style="background:#0d1117; border-radius:8px; padding:1rem; border:1px solid #30363d;">
+                                <div
+                                    style="color:var(--warning); font-size:0.75rem; font-weight:600; margin-bottom:0.5rem;">
+                                    LATENCY SLI</div>
+                                <div style="font-size:0.85rem; color:var(--text-dim);">p95(request_latency_ms) &lt;
+                                    200ms</div>
+                                <div style="margin-top:0.5rem; font-size:0.8rem;">95% of requests within threshold</div>
+                            </div>
+                            <div style="background:#0d1117; border-radius:8px; padding:1rem; border:1px solid #30363d;">
+                                <div
+                                    style="color:var(--danger); font-size:0.75rem; font-weight:600; margin-bottom:0.5rem;">
+                                    ERROR BUDGET POLICY</div>
+                                <div style="font-size:0.85rem; color:var(--text-dim);">0.1% budget = ~43 min
+                                    downtime/month</div>
+                                <div style="margin-top:0.5rem; font-size:0.8rem;">Freeze releases if &gt;80% consumed
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top:1rem; display:grid; grid-template-columns: repeat(2, 1fr); gap:1rem;">
+                            <div style="background:#0d1117; border-radius:8px; padding:1rem; border:1px solid #30363d;">
+                                <div
+                                    style="color:var(--danger); font-size:0.75rem; font-weight:600; margin-bottom:0.3rem;">
+                                    ⚡ FAST BURN ALERT</div>
+                                <div style="font-size:0.8rem; color:var(--text-dim);">Trigger: 2% budget consumed in 1h
+                                    → PagerDuty (Critical)</div>
+                            </div>
+                            <div style="background:#0d1117; border-radius:8px; padding:1rem; border:1px solid #30363d;">
+                                <div
+                                    style="color:var(--warning); font-size:0.75rem; font-weight:600; margin-bottom:0.3rem;">
+                                    🐢 SLOW BURN ALERT</div>
+                                <div style="font-size:0.8rem; color:var(--text-dim);">Trigger: 5% budget consumed in 24h
+                                    → Slack/Ticket (Warning)</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Round 4 Section -->
+                <section id="round4" class="section">
+                    <h2 style="margin-bottom: 0.5rem">Security &amp; Compliance</h2>
+                    <div style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1.5rem;">PCI-DSS · PMLA ·
+                        Zero-Trust · Shift-Left Security</div>
+
+                    <!-- Compliance Score + Controls -->
+                    <div class="grid" style="grid-template-columns: 1fr 3fr; margin-bottom: 1.5rem;">
+                        <div class="card"
+                            style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; text-align:center;">
+                            <div class="card-title" style="margin-bottom:1rem;">PCI-DSS Score</div>
+                            <div style="position:relative; width:140px; height:140px;">
+                                <svg viewBox="0 0 140 140" style="transform:rotate(-90deg);">
+                                    <circle cx="70" cy="70" r="55" fill="none" stroke="#21262d" stroke-width="12" />
+                                    <circle id="pci-ring" cx="70" cy="70" r="55" fill="none" stroke="var(--success)"
+                                        stroke-width="12" stroke-dasharray="345.4" stroke-dashoffset="0"
+                                        stroke-linecap="round" style="transition: stroke-dashoffset 1s ease;" />
+                                </svg>
+                                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
+                                    <div id="pci-score-display"
+                                        style="font-size:1.8rem; font-weight:700; color:var(--success);">—</div>
+                                    <div style="font-size:0.65rem; color:var(--text-dim);">compliant</div>
+                                </div>
+                            </div>
+                            <div id="pci-summary" style="margin-top:1rem; font-size:0.75rem; color:var(--text-dim);">—
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3 style="margin-bottom:1rem;">PCI-DSS Control Checklist</h3>
+                            <div id="pci-controls"
+                                style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; max-height:220px; overflow-y:auto;">
+                                <div style="color:var(--text-dim); padding:1rem; text-align:center;">Loading controls...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Threat Scanner + Audit Logs -->
+                    <div class="grid" style="grid-template-columns: 1fr 1.2fr; margin-bottom: 1.5rem;">
+                        <div class="card">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <h3 style="margin:0;">Security Scanner</h3>
+                                <span id="scan-badge" class="pill" style="font-size:0.65rem; display:none;">IDLE</span>
+                            </div>
+                            <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+                                <button onclick="r4StartScan()" id="scan-btn"
+                                    style="font-size:0.8rem; padding:0.5rem 1rem;">🔍 Run Full Scan</button>
+                                <div style="font-size:0.75rem; color:var(--text-dim); align-self:center;">SAST · DAST ·
+                                    SCA · Secrets</div>
+                            </div>
+                            <div id="scan-progress-wrap" style="display:none; margin-bottom:1rem;">
+                                <div
+                                    style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-dim); margin-bottom:4px;">
+                                    <span id="scan-step-label">Initializing...</span>
+                                    <span id="scan-pct">0%</span>
+                                </div>
+                                <div style="background:#21262d; border-radius:4px; height:6px;">
+                                    <div id="scan-progress-bar"
+                                        style="background: linear-gradient(90deg, var(--accent), var(--success)); width:0%; height:100%; border-radius:4px; transition:width 0.5s;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="scan-findings"
+                                style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:0.4rem;">
+                                <div style="color:var(--text-dim); font-size:0.8rem; text-align:center; padding:1rem;">
+                                    Run a scan to detect vulnerabilities</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <h3 style="margin:0;">PMLA Audit Log Stream</h3>
+                                <div style="display:flex; gap:0.4rem;">
+                                    <button class="pill" style="padding:0.25rem 0.5rem; font-size:0.65rem;"
+                                        onclick="r4FilterLogs('')">ALL</button>
+                                    <button class="pill" style="padding:0.25rem 0.5rem; font-size:0.65rem;"
+                                        onclick="r4FilterLogs('HIGH')">HIGH</button>
+                                    <button class="pill" style="padding:0.25rem 0.5rem; font-size:0.65rem;"
+                                        onclick="r4FilterLogs('MEDIUM')">MED</button>
+                                </div>
+                            </div>
+                            <div id="audit-log-stream"
+                                style="max-height:280px; overflow-y:auto; font-family:'Courier New',Courier,monospace; font-size:0.72rem; display:flex; flex-direction:column; gap:0.3rem;">
+                                <div style="color:var(--text-dim); padding:1rem; text-align:center;">Loading audit
+                                    logs...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Architecture Cards -->
+                    <div class="grid" style="margin-bottom:1.5rem;">
+                        <div class="card">
+                            <div style="font-size:1.4rem; margin-bottom:0.5rem;">🔐</div>
+                            <div class="card-title">IAM / IRSA</div>
+                            <div style="font-size:0.82rem; color:var(--text-dim); margin-top:0.5rem;">Each microservice
+                                has a <strong style="color:#fff">dedicated IAM Role</strong> via IRSA. Fine-grained
+                                policies — User Service can ONLY access its DynamoDB table + S3 bucket. Zero wildcard
+                                permissions.</div>
+                        </div>
+                        <div class="card">
+                            <div style="font-size:1.4rem; margin-bottom:0.5rem;">🛡️</div>
+                            <div class="card-title">mTLS / Zero-Trust</div>
+                            <div style="font-size:0.82rem; color:var(--text-dim); margin-top:0.5rem;"><strong
+                                    style="color:#fff">Istio service mesh</strong> enforces mutual TLS for all
+                                pod-to-pod traffic. Certificates auto-rotate every 24h. No unauthenticated east-west
+                                communication.</div>
+                        </div>
+                        <div class="card">
+                            <div style="font-size:1.4rem; margin-bottom:0.5rem;">🔑</div>
+                            <div class="card-title">Secrets Rotation</div>
+                            <div style="font-size:0.82rem; color:var(--text-dim); margin-top:0.5rem;"><strong
+                                    style="color:#fff">AWS Secrets Manager</strong> with automated 30-day rotation via
+                                Lambda. Zero manual handling. Secrets injected at pod startup via Kubernetes External
+                                Secrets Operator.</div>
+                        </div>
+                        <div class="card">
+                            <div style="font-size:1.4rem; margin-bottom:0.5rem;">🌐</div>
+                            <div class="card-title">Network Security</div>
+                            <div style="font-size:0.82rem; color:var(--text-dim); margin-top:0.5rem;"><strong
+                                    style="color:#fff">AWS WAF</strong> at ALB level (SQLi, XSS, rate limiting). All
+                                microservices in private VPC subnets — zero public ingress. VPC PrivateLink for AWS
+                                service access.</div>
+                        </div>
+                    </div>
+
+                    <!-- Secure CI/CD Pipeline -->
+                    <div class="card">
+                        <h3 style="margin-bottom:1rem;">Secure CI/CD Pipeline — Shift-Left Security</h3>
+                        <div style="overflow-x:auto; padding-bottom:0.5rem;">
+                            <div id="pipeline-stages"
+                                style="display:flex; align-items:center; gap:0; min-width:max-content;"></div>
+                        </div>
+                        <div style="margin-top:1rem; font-size:0.75rem; color:var(--text-dim);">
+                            Pipeline auto-gates on <strong style="color:var(--danger)">CRITICAL/HIGH</strong> findings.
+                            SBOM generated per image via Syft/CycloneDX and stored in S3.
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+            const section = document.getElementById(id);
+            if (section) section.classList.add('active');
+
+            // Handle tab activation via event or manual trigger
+            if (window.event && window.event.currentTarget) {
+                window.event.currentTarget.classList.add('active');
+            } else {
+                // Fallback for direct calls
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(t => {
+                    if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(id)) {
+                        t.classList.add('active');
+                    }
+                });
+            }
+
+            // Re-trigger section-specific data fetches on tab switch
+            if (id === 'round3') {
+                if (typeof r3Poll === 'function') r3Poll();
+            }
+            if (id === 'round4') {
+                if (typeof r4FetchCompliance === 'function') r4FetchCompliance();
+                if (typeof r4FetchLogs === 'function') r4FetchLogs(r4LogFilter || '');
+                if (typeof buildPipelineOnce === 'function') buildPipelineOnce();
+            }
+        }
+
+        // ApexCharts Initialization
+        let chartData = [];
+        const maxDataPoints = 30;
+
+        const options = {
+            series: [{
+                name: 'Requests per Second',
+                data: chartData
+            }],
+            chart: {
+                id: 'realtime',
+                height: 300,
+                type: 'area',
+                animations: {
+                    enabled: true,
+                    easing: 'linear',
+                    dynamicAnimation: {
+                        speed: 1000
+                    }
+                },
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3,
+                colors: ['#58a6ff']
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.45,
+                    opacityTo: 0.05,
+                    stops: [20, 100, 100, 100]
+                }
+            },
+            markers: {
+                size: 0
+            },
+            xaxis: {
+                type: 'datetime',
+                range: 30000, // 30 seconds range
+                title: {
+                    text: 'Time (Live Feed)',
+                    style: { color: '#8b949e' }
+                },
+                labels: {
+                    style: {
+                        colors: '#8b949e'
+                    },
+                    datetimeUTC: false
+                },
+                axisBorder: {
+                    show: false
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Requests Per Second (RPS)',
+                    style: { color: '#8b949e' }
+                },
+                labels: {
+                    style: {
+                        colors: '#8b949e'
+                    }
+                }
+            },
+            grid: {
+                borderColor: '#30363d',
+                xaxis: {
+                    lines: {
+                        show: true
+                    }
+                }
+            },
+            legend: {
+                show: false
+            },
+            colors: ['#58a6ff']
+        };
+
+        const chart = new ApexCharts(document.querySelector("#chart"), options);
+        chart.render();
+
+        // Unified Global Time Controls
+        function handleGlobalTimeChange() {
+            const val = document.getElementById('global-time-selector').value;
+            const daysContainer = document.getElementById('global-custom-days-container');
+            const dateContainer = document.getElementById('global-date-range-container');
+
+            daysContainer.style.display = 'none';
+            dateContainer.style.display = 'none';
+
+            localStorage.setItem('unio_global_range_type', val);
+
+            if (val === 'custom-days') {
+                daysContainer.style.display = 'flex';
+            } else if (val === 'date-range') {
+                dateContainer.style.display = 'flex';
+                if (!document.getElementById('global-start-date').value) {
+                    const now = new Date();
+                    document.getElementById('global-start-date').value = new Date(now.getTime() - 3600000).toISOString().slice(0, 16);
+                    document.getElementById('global-end-date').value = now.toISOString().slice(0, 16);
+                }
+            } else {
+                updateVisuals(parseInt(val));
+            }
+        }
+
+        function applyGlobalCustomDays() {
+            const days = document.getElementById('global-day-input').value;
+            if (days && days > 0) {
+                localStorage.setItem('unio_global_custom_days', days);
+                updateVisuals(days * 24 * 60 * 60 * 1000);
+            }
+        }
+
+        function applyGlobalDateRange() {
+            const startStr = document.getElementById('global-start-date').value;
+            const endStr = document.getElementById('global-end-date').value;
+            const start = new Date(startStr).getTime();
+            const end = new Date(endStr).getTime();
+
+            if (isNaN(start) || isNaN(end) || start >= end) {
+                alert("Please select a valid date range");
+                return;
+            }
+
+            localStorage.setItem('unio_global_start', startStr);
+            localStorage.setItem('unio_global_end', endStr);
+
+            chart.updateOptions({
+                xaxis: { min: start, max: end, range: undefined }
+            });
+            addLog(`Global filter applied: ${new Date(start).toLocaleString()} to ${new Date(end).toLocaleString()}`, 'info');
+        }
+
+        function updateVisuals(rangeMs) {
+            chart.updateOptions({
+                xaxis: { range: rangeMs, min: undefined, max: undefined }
+            });
+            addLog(`Global dashboard range updated to: ${document.getElementById('global-time-selector').selectedOptions[0].text}`, 'info');
+        }
+
+        function addLog(msg, type = 'info') {
+            const stream = document.getElementById('log-stream');
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            const time = new Date().toLocaleTimeString();
+            let icon = '🟦';
+            if (type === 'success') icon = '🟩';
+            if (type === 'error') icon = '🟥';
+
+            line.innerHTML = `<span style="color: #888;">[${time}]</span> ${icon} ${msg}`;
+            stream.prepend(line);
+
+            if (stream.children.length > 20) stream.lastChild.remove();
+        }
+
+        async function checkHealth() {
+            const statusPill = document.querySelector('.pill-success');
+
+            try {
+                const res = await fetch('http://localhost:54321/metrics');
+                if (res.ok) {
+                    const text = await res.text();
+                    statusPill.innerHTML = '<div class="pulse"></div>System Online';
+                    statusPill.className = 'pill pill-success';
+
+                    // Parse Creation-Specific Metrics (POST /user)
+                    const creationSuccessMatch = text.match(/^success_count{method="POST",path="\/user"}\s+(\d+)/m);
+                    const creationSuccess = creationSuccessMatch ? creationSuccessMatch[1] : "0";
+
+                    const creationFailureMatch = text.match(/^failure_count{method="POST",path="\/user",.*?}\s+(\d+)/m);
+                    const creationFailure = creationFailureMatch ? creationFailureMatch[1] : "0";
+
+                    const totalReq = (text.match(/^total_requests{.*?} (\d+)/gm) || []).reduce((acc, line) => acc + parseInt(line.split(' ').pop()), 0);
+                    const successReq = (text.match(/^success_count{.*?} (\d+)/gm) || []).reduce((acc, line) => acc + parseInt(line.split(' ').pop()), 0);
+
+                    const latencySum = (text.match(/^request_latency_ms_sum{.*?} (\d+)/gm) || []).reduce((acc, line) => acc + parseInt(line.split(' ').pop()), 0);
+                    const latencyCount = (text.match(/^request_latency_ms_count{.*?} (\d+)/gm) || []).reduce((acc, line) => acc + parseInt(line.split(' ').pop()), 0);
+
+                    const successRate = totalReq > 0 ? ((successReq / totalReq) * 100).toFixed(1) : "100";
+                    const avgLatency = latencyCount > 0 ? (latencySum / latencyCount).toFixed(0) : "0";
+
+                    // Update UI Cards with LIVE data
+                    document.getElementById('stat-success-rate').innerText = successRate + "%";
+                    document.getElementById('stat-latency').innerText = avgLatency + "ms";
+                    document.getElementById('stat-total').innerText = totalReq;
+                    document.getElementById('stat-success-count').innerText = creationSuccess;
+                    document.getElementById('stat-failure-count').innerText = creationFailure;
+
+                    // Parse Uptime (process_start_time_seconds)
+                    const startTimeMatch = text.match(/^process_start_time_seconds\s+(\d+(\.\d+)?)/m);
+                    if (startTimeMatch) {
+                        const startSeconds = parseFloat(startTimeMatch[1]);
+                        const uptimeSeconds = Math.floor((Date.now() / 1000) - startSeconds);
+
+                        const h = Math.floor(uptimeSeconds / 3600);
+                        const m = Math.floor((uptimeSeconds % 3600) / 60);
+                        const s = uptimeSeconds % 60;
+                        document.getElementById('stat-uptime').innerText =
+                            `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                    }
+
+                    // Parse Method Distribution
+                    const getMatch = text.match(/^total_requests{method="GET",.*?}\s+(\d+)/gm) || [];
+                    const getCount = getMatch.reduce((acc, line) => acc + parseInt(line.split(' ').pop()), 0);
+
+                    const postMatch = text.match(/^total_requests{method="POST",.*?}\s+(\d+)/gm) || [];
+                    const postCount = postMatch.reduce((acc, line) => acc + parseInt(line.split(' ').pop()), 0);
+
+                    document.getElementById('dist-get').innerText = getCount;
+                    document.getElementById('dist-post').innerText = postCount;
+                    document.getElementById('dist-other').innerText = totalReq - (getCount + postCount);
+
+                    // Update Visualization Data (RPS)
+                    const rps = totalReq - lastTotal;
+                    const timestamp = new Date().getTime();
+
+                    chartData.push({ x: timestamp, y: rps });
+                    // Keep up to 1000 points for longer time ranges
+                    if (chartData.length > 1000) chartData.shift();
+
+                    chart.updateSeries([{
+                        data: chartData
+                    }]);
+
+                    // Advanced Logging Logic
+                    if (totalReq > lastTotal) {
+                        const count = totalReq - lastTotal;
+                        const rid = 'req_' + Math.floor(Math.random() * 1000000).toString(16);
+
+                        // Detailed logs for creations vs others
+                        const creationDiff = parseInt(creationSuccess) - lastCreationSuccess;
+                        if (creationDiff > 0) {
+                            addLog(`[ID: ${rid}] USER_CREATED: 201 Created | Latency: ${avgLatency}ms | Data Persisted to SQL`, 'success');
+                            lastCreationSuccess = parseInt(creationSuccess);
+                        } else {
+                            addLog(`[ID: ${rid}] API_HIT: GET/Internal | Latency: ${avgLatency}ms | Status: 200 OK`, 'info');
+                        }
+                    }
+
+                    if (parseInt(creationFailure) > lastCreationFailure) {
+                        const rid = 'err_' + Math.floor(Math.random() * 1000000).toString(16);
+                        addLog(`[ID: ${rid}] CREATION_FAILED: 400 Validation Error | Detail: Missing required fields`, 'error');
+                        lastCreationFailure = parseInt(creationFailure);
+                    }
+
+                    lastTotal = totalReq;
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                statusPill.innerHTML = '<div class="pulse" style="background: var(--danger); box-shadow: 0 0 10px var(--danger)"></div>System Offline';
+                statusPill.className = 'pill pill-warning';
+
+                chartData.push({ x: new Date().getTime(), y: 0 });
+                if (chartData.length > 1000) chartData.shift();
+                chart.updateSeries([{ data: chartData }]);
+            }
+        }
+
+        let lastTotal = 0;
+        let lastCreationSuccess = 0;
+        let lastCreationFailure = 0;
+
+        // Restore State on Load
+        window.addEventListener('load', () => {
+            const savedType = localStorage.getItem('unio_global_range_type');
+            if (savedType) {
+                document.getElementById('global-time-selector').value = savedType;
+                if (savedType === 'custom-days') {
+                    const d = localStorage.getItem('unio_global_custom_days');
+                    if (d) document.getElementById('global-day-input').value = d;
+                } else if (savedType === 'date-range') {
+                    const s = localStorage.getItem('unio_global_start');
+                    const e = localStorage.getItem('unio_global_end');
+                    if (s) document.getElementById('global-start-date').value = s;
+                    if (e) document.getElementById('global-end-date').value = e;
+                }
+                handleGlobalTimeChange();
+                if (savedType === 'custom-days') applyGlobalCustomDays();
+                else if (savedType === 'date-range') applyGlobalDateRange();
+            }
+        });
+
+        // Round 2 IDP Logic
+        let currentScaffold = null;
+
+        async function apiRegisterService() {
+            const svcName = document.getElementById('idp-svc-name').value;
+            const teamName = document.getElementById('idp-team-name').value;
+            const repoUrl = document.getElementById('idp-repo-url').value;
+
+            if (!svcName || !repoUrl) {
+                alert("Please fill all fields");
+                return;
+            }
+
+            const btn = document.getElementById('btn-scaffold');
+            btn.innerText = "Provisioning...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('http://localhost:4001/services', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        service_name: svcName,
+                        team_name: teamName,
+                        repo_url: repoUrl
+                    })
+                });
+                const data = await res.json();
+
+                currentScaffold = data.scaffold;
+                document.getElementById('idp-ecr-out').innerText = data.ecr_repo;
+                document.getElementById('idp-actions').style.display = 'block';
+                showManifest('k8s');
+
+                btn.innerText = "Bootstrap & Generate Manifests";
+                btn.disabled = false;
+
+                addLog(`[IDP] Service ${svcName} registered and infra provisioned`, 'success');
+            } catch (e) {
+                alert("IDP Service is offline. Start it on port 4001.");
+                btn.innerText = "Bootstrap & Generate Manifests";
+                btn.disabled = false;
+            }
+        }
+
+        function showManifest(type) {
+            if (!currentScaffold) return;
+            const viewer = document.getElementById('idp-manifest-viewer');
+            if (type === 'k8s') viewer.innerText = currentScaffold.deployment_yaml;
+            if (type === 'ci') viewer.innerText = currentScaffold.pipeline_yaml;
+            if (type === 'tf') viewer.innerText = currentScaffold.terraform_tf;
+        }
+
+        async function apiDeployService() {
+            const svcName = document.getElementById('idp-svc-name').value;
+            try {
+                const res = await fetch(`http://localhost:4001/deploy/${svcName}`, {
+                    method: 'POST'
+                });
+                const job = await res.json();
+
+                // Clear console for new run
+                const consoleOut = document.getElementById('idp-console-out');
+                consoleOut.innerHTML = "";
+                addConsoleLog(`[START] Pipeline Job ID: ${job.build_id}`, 'info');
+
+                trackDeployment(job.build_id, svcName);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function addConsoleLog(msg, type = 'info') {
+            const consoleOut = document.getElementById('idp-console-out');
+            const statusPill = document.getElementById('idp-console-status');
+
+            statusPill.style.display = 'block';
+            statusPill.innerText = "RUNNING";
+            statusPill.className = "pill pill-warning";
+
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            div.style.color = type === 'error' ? 'var(--danger)' : (type === 'success' ? 'var(--success)' : '#ccc');
+            div.style.marginBottom = '0.2rem';
+            div.innerText = `> ${msg}`;
+            consoleOut.appendChild(div);
+            consoleOut.scrollTop = consoleOut.scrollHeight;
+        }
+
+        function addAuditLog(msg, type = 'info') {
+            const logContainer = document.getElementById('idp-audit-logs');
+            if (logContainer.innerText.includes("Waiting")) logContainer.innerHTML = "";
+            const div = document.createElement('div');
+            div.style = "padding: 0.3rem 0; border-bottom: 1px solid #21262d; color: #8b949e";
+            div.innerHTML = `<span style="color: #555">[${new Date().toLocaleTimeString()}]</span> ${msg}`;
+            logContainer.prepend(div);
+        }
+
+        function trackDeployment(buildId, svcName) {
+            const container = document.getElementById('idp-deployments');
+            if (container.innerText.includes("No active deployments")) container.innerHTML = "";
+
+            const div = document.createElement('div');
+            div.id = `deploy-${buildId}`;
+            div.style = "display:flex; justify-content:space-between; margin-bottom:0.5rem; border-bottom:1px solid #30363d; padding-bottom:0.5rem; font-size: 0.8rem;";
+            div.innerHTML = `<span>${svcName} <small style="color:#555">#${buildId.slice(0, 8)}</small></span> <span class="pill pill-warning" style="font-size: 0.6rem">RUNNING</span>`;
+            container.prepend(div);
+
+            addAuditLog(`Triggered deployment for <b>${svcName}</b>`, 'info');
+
+            // Simulated Pipeline Steps
+            const steps = [
+                "Fetching source code from git repo...",
+                "Running vulnerability scan on dependencies...",
+                "Docker build -t unio-registry/" + svcName + ":latest .",
+                "Successfully built image. Pushing to ECR...",
+                "ECR Upload: [####################] 100%",
+                "Applying Kubernetes manifests to cluster...",
+                "Waiting for rollout to complete..."
+            ];
+
+            let currentStep = 0;
+            const logInterval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    addConsoleLog(steps[currentStep], 'info');
+                    currentStep++;
+                } else {
+                    clearInterval(logInterval);
+                }
+            }, 700);
+
+            const interval = setInterval(async () => {
+                const res = await fetch(`http://localhost:4001/deploy/${buildId}`);
+                const status = await res.json();
+
+                const pill = div.querySelector('.pill');
+                if (status.status === 'SUCCESS') {
+                    pill.innerText = "SUCCESS";
+                    pill.className = "pill pill-success";
+                    pill.style.fontSize = "0.6rem";
+
+                    const statusPill = document.getElementById('idp-console-status');
+                    if (statusPill) {
+                        statusPill.innerText = "FINISHED";
+                        statusPill.className = "pill pill-success";
+                    }
+
+                    addConsoleLog(`Pipeline SUCCESS! Service ${svcName} is live.`, 'success');
+                    addAuditLog(`Deployment <b>${buildId.slice(0, 8)}</b> for ${svcName} COMPLETED`, 'success');
+
+                    clearInterval(interval);
+                    addLog(`[GitOps] Deployment ${buildId.slice(0, 8)} for ${svcName} successful`, 'success');
+                }
+            }, 2000);
+        }
+
+        function generateKey() {
+            document.getElementById('post-ikey').value = 'tx_' + Math.floor(Math.random() * 1000000);
+        }
+
+        function autoFill() {
+            const nextNum = Math.floor(Math.random() * 9000) + 1000;
+            document.getElementById('post-userid').value = 'u' + nextNum;
+            document.getElementById('post-name').value = 'Random User ' + nextNum;
+            document.getElementById('post-email').value = 'user' + nextNum + '@example.com';
+            document.getElementById('post-phone').value = '+91-9' + Math.floor(Math.random() * 899999999 + 100000000);
+            generateKey();
+        }
+
+        async function apiCreateUser(event) {
+            const btn = event.currentTarget;
+            const resBox = document.getElementById('api-result-box');
+            const resPre = document.getElementById('api-result');
+
+            const payload = {
+                user_id: document.getElementById('post-userid').value,
+                name: document.getElementById('post-name').value,
+                email: document.getElementById('post-email').value,
+                phone: document.getElementById('post-phone').value
+            };
+            const ikey = document.getElementById('post-ikey').value;
+
+            btn.innerText = "Sending...";
+            try {
+                const res = await fetch('http://localhost:54321/user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-idempotency-key': ikey },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                resBox.style.display = 'block';
+                resPre.innerText = JSON.stringify(data, null, 2);
+                btn.innerText = "Success!";
+                btn.style.background = 'var(--success)';
+            } catch (e) {
+                btn.innerText = "Error";
+                btn.style.background = 'var(--danger)';
+            }
+            setTimeout(() => { btn.innerText = "Create User"; btn.style.background = 'var(--accent)'; }, 2000);
+        }
+
+        async function apiGetUser(event) {
+            const id = document.getElementById('get-userid').value;
+            const resBox = document.getElementById('api-result-box');
+            const resPre = document.getElementById('api-result');
+
+            try {
+                const res = await fetch(`http://localhost:54321/user/${id}`);
+                const data = await res.json();
+                resBox.style.display = 'block';
+                resPre.innerText = JSON.stringify(data, null, 2);
+                resPre.style.color = res.ok ? 'var(--accent)' : 'var(--danger)';
+            } catch (e) {
+                resBox.style.display = 'block';
+                resPre.innerText = "Connection Error";
+            }
+        }
+
+        function simulateAction(msg) {
+            const btn = event.currentTarget;
+            const original = btn.innerText;
+            btn.innerText = msg;
+            btn.style.opacity = '0.7';
+            setTimeout(() => {
+                btn.innerText = 'Infrastructure Provisioned!';
+                btn.style.background = 'var(--success)';
+                setTimeout(() => {
+                    btn.innerText = original;
+                    btn.style.background = 'var(--accent)';
+                    btn.style.opacity = '1';
+                }, 2000);
+            }, 3000);
+        }
+
+        setInterval(checkHealth, 1000);
+        checkHealth();
+
+        // ═══════════════════════════════════════════════════════
+        // ROUND 3 — K8s Topology & SLO Management
+        // ═══════════════════════════════════════════════════════
+
+        const R3_API = 'http://localhost:4002';
+
+        const K8S_MANIFESTS = {
+            k8s: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-metadata-service
+  namespace: production
+  labels:
+    app: user-metadata-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: user-metadata-service
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+    spec:
+      containers:
+      - name: user-metadata-service
+        image: myrepo/user-metadata-service:v1.0.0
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-metadata-service
+  namespace: production
+spec:
+  selector:
+    app: user-metadata-service
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: user-metadata-service-pdb
+  namespace: production
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: user-metadata-service`,
+
+            helm: `# Helm values.yaml — User Metadata Service
+replicaCount: 3
+
+image:
+  repository: myrepo/user-metadata-service
+  pullPolicy: IfNotPresent
+  tag: "v1.0.0"
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+hpa:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  cpuUtilization: 70
+
+# Helm template: deployment.yaml
+# image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+# replicas: {{ .Values.replicaCount }}
+# resources: {{- toYaml .Values.resources | nindent 12 }}`,
+
+            hpa: `apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: user-metadata-service-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: user-metadata-service
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70   # Scale-out when avg CPU > 70%
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80   # Scale-out when avg MEM > 80%
+
+# Behavior tuning
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300`,
+
+            otel: `// OpenTelemetry Tracing Setup — tracing.ts
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { Resource } from '@opentelemetry/resources';
+import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+
+const sdk = new NodeSDK({
+    resource: new Resource({
+        [SemanticResourceAttributes.SERVICE_NAME]: 'user-metadata-service',
+    }),
+    traceExporter: new OTLPTraceExporter({
+        url: 'http://otel-collector:4318/v1/traces',
+    }),
+    spanProcessor: new SimpleSpanProcessor(new OTLPTraceExporter()),
+});
+
+sdk.start();
+
+// Usage in request handlers:
+// const tracer = trace.getTracer('user-metadata-service');
+// const span = tracer.startSpan('createUser');
+// span.setAttribute('user.id', userId);
+// span.end();
+
+process.on('SIGTERM', () => {
+    sdk.shutdown().finally(() => process.exit(0));
+});`
+        };
+
+        function r3ShowManifest(type) {
+            const viewer = document.getElementById('r3-manifest-viewer');
+            viewer.innerText = K8S_MANIFESTS[type] || '// Not found';
+        }
+
+        function r3SetBadge(el, status) {
+            if (!el) return;
+            if (status === 'MET') {
+                el.innerText = '✓ MET';
+                el.className = 'pill pill-success';
+            } else {
+                el.innerText = '✗ BREACHED';
+                el.className = 'pill';
+                el.style.background = 'rgba(248,81,73,0.15)';
+                el.style.color = 'var(--danger)';
+                el.style.border = '1px solid var(--danger)';
+            }
+        }
+
+        async function r3FetchSLO() {
+            try {
+                const data = await fetch(R3_API + '/slo').then(r => r.json());
+
+                // Availability
+                const availEl = document.getElementById('slo-availability');
+                if (availEl) {
+                    availEl.innerText = data.availability.current.toFixed(3) + '%';
+                    availEl.style.color = data.availability.status === 'MET' ? 'var(--success)' : 'var(--danger)';
+                }
+                r3SetBadge(document.getElementById('slo-avail-badge'), data.availability.status);
+
+                // Latency p95
+                const p95El = document.getElementById('slo-p95');
+                if (p95El) {
+                    p95El.innerText = data.latency_p95.current_ms + 'ms';
+                    p95El.style.color = data.latency_p95.status === 'MET' ? 'var(--success)' : 'var(--danger)';
+                }
+                r3SetBadge(document.getElementById('slo-p95-badge'), data.latency_p95.status);
+
+                // Latency p99
+                const p99El = document.getElementById('slo-p99');
+                if (p99El) {
+                    p99El.innerText = data.latency_p99.current_ms + 'ms';
+                    p99El.style.color = data.latency_p99.status === 'MET' ? 'var(--success)' : 'var(--danger)';
+                }
+                r3SetBadge(document.getElementById('slo-p99-badge'), data.latency_p99.status);
+
+                // Policy
+                const policyEl = document.getElementById('slo-policy');
+                const policyDesc = document.getElementById('slo-policy-desc');
+                if (policyEl) {
+                    if (data.error_budget.policy === 'FREEZE') {
+                        policyEl.innerText = '🚫 FROZEN';
+                        policyEl.style.color = 'var(--danger)';
+                        if (policyDesc) policyDesc.innerText = 'No new feature releases allowed';
+                    } else {
+                        policyEl.innerText = '✅ NORMAL';
+                        policyEl.style.color = 'var(--success)';
+                        if (policyDesc) policyDesc.innerText = 'Feature releases permitted';
+                    }
+                }
+
+                // Error budget ring
+                const remaining = data.error_budget.remaining_pct;
+                const circumference = 408.41;
+                const offset = circumference * (1 - remaining / 100);
+                const ring = document.getElementById('budget-ring');
+                const display = document.getElementById('budget-pct-display');
+                const minutes = document.getElementById('budget-minutes');
+                if (ring) {
+                    ring.style.strokeDashoffset = offset;
+                    ring.style.stroke = remaining > 50 ? 'var(--success)' : remaining > 20 ? 'var(--warning)' : 'var(--danger)';
+                }
+                if (display) {
+                    display.innerText = remaining.toFixed(1) + '%';
+                    display.style.color = remaining > 50 ? 'var(--success)' : remaining > 20 ? 'var(--warning)' : 'var(--danger)';
+                }
+                if (minutes) {
+                    minutes.innerText = `~${data.error_budget.remaining_minutes} min of downtime remaining this month`;
+                }
+            } catch (e) {
+                const p = document.getElementById('slo-availability');
+                if (p) p.innerText = 'Offline';
+            }
+        }
+
+        async function r3FetchCluster() {
+            try {
+                const services = await fetch(R3_API + '/cluster').then(r => r.json());
+                const container = document.getElementById('pod-topology');
+                if (!container) return;
+                container.innerHTML = '';
+
+                services.forEach(svc => {
+                    const cpuBar = Math.min(100, svc.cpu);
+                    const memBar = Math.min(100, svc.memory);
+                    const statusColor = svc.status === 'Healthy' ? 'var(--success)' : svc.status === 'Degraded' ? 'var(--warning)' : 'var(--danger)';
+
+                    // Pod dots
+                    let dots = '';
+                    for (let i = 0; i < svc.maxReplicas; i++) {
+                        const active = i < svc.replicas;
+                        dots += `<div style="width:10px;height:10px;border-radius:50%;background:${active ? statusColor : '#21262d'};transition:background 0.5s;"></div>`;
+                    }
+
+                    const row = document.createElement('div');
+                    row.style.cssText = 'background:#0d1117; border-radius:8px; padding:0.75rem 1rem; border:1px solid #21262d;';
+                    row.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <div>
+                                <span style="font-weight:600; font-size:0.85rem;">${svc.name}</span>
+                                <span style="font-size:0.7rem; color:var(--text-dim); margin-left:0.5rem;">${svc.version}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:0.75rem;">
+                                <div style="display:flex; gap:3px; align-items:center;">${dots}</div>
+                                <span style="font-size:0.7rem; color:${statusColor}; font-weight:600;">${svc.replicas}/${svc.maxReplicas} pods</span>
+                                <span style="font-size:0.65rem; color:${statusColor}; border:1px solid ${statusColor}; padding:0.1rem 0.4rem; border-radius:10px;">${svc.status}</span>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-dim); margin-bottom:2px;">
+                                    <span>CPU</span><span style="color:${cpuBar > 70 ? 'var(--warning)' : '#fff'}">${svc.cpu.toFixed(1)}%</span>
+                                </div>
+                                <div style="background:#21262d; border-radius:3px; height:5px;">
+                                    <div style="background:${cpuBar > 80 ? 'var(--danger)' : cpuBar > 60 ? 'var(--warning)' : 'var(--accent)'}; width:${cpuBar}%; height:100%; border-radius:3px; transition:width 0.8s;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-dim); margin-bottom:2px;">
+                                    <span>Memory</span><span>${svc.memory.toFixed(1)}%</span>
+                                </div>
+                                <div style="background:#21262d; border-radius:3px; height:5px;">
+                                    <div style="background:${memBar > 80 ? 'var(--danger)' : 'var(--success)'}; width:${memBar}%; height:100%; border-radius:3px; transition:width 0.8s;"></div>
+                                </div>
+                            </div>
+                        </div>`;
+                    container.appendChild(row);
+                });
+            } catch (e) { }
+        }
+
+        async function r3FetchAlerts() {
+            try {
+                const alerts = await fetch(R3_API + '/alerts').then(r => r.json());
+                const container = document.getElementById('alert-timeline');
+                if (!container) return;
+                container.innerHTML = '';
+
+                alerts.forEach(ev => {
+                    const color = ev.severity === 'critical' ? 'var(--danger)' : ev.severity === 'warning' ? 'var(--warning)' : 'var(--success)';
+                    const icon = ev.severity === 'critical' ? '🔴' : ev.severity === 'warning' ? '🟡' : '🟢';
+                    const time = new Date(ev.ts).toLocaleTimeString();
+
+                    const el = document.createElement('div');
+                    el.style.cssText = `display:flex; gap:0.75rem; padding:0.6rem; background:#0d1117; border-radius:6px; border-left:3px solid ${color}; font-size:0.8rem;`;
+                    el.innerHTML = `
+                        <span style="font-size:1rem;">${icon}</span>
+                        <div style="flex:1;">
+                            <div style="color:#fff; font-weight:500;">${ev.title}</div>
+                            <div style="color:var(--text-dim); font-size:0.75rem; margin-top:0.1rem;">${ev.desc}</div>
+                        </div>
+                        <div style="color:var(--text-dim); font-size:0.7rem; white-space:nowrap;">${time}</div>`;
+                    container.appendChild(el);
+                });
+            } catch (e) { }
+        }
+
+        async function r3SimulateIncident() {
+            try {
+                await fetch(R3_API + '/simulate/incident', { method: 'POST', body: '{}', headers: { 'Content-Type': 'application/json' } });
+                addLog('[SLO] ⚠️ Incident injected — error budget burned', 'error');
+                r3FetchSLO();
+                r3FetchAlerts();
+            } catch (e) { alert('Round 3 service offline (port 4002)'); }
+        }
+
+        async function r3SimulateScale() {
+            try {
+                const res = await fetch(R3_API + '/simulate/scale', { method: 'POST', body: '{}', headers: { 'Content-Type': 'application/json' } });
+                const data = await res.json();
+                addLog(`[HPA] ⚡ Manual scale-out → ${data.replicas} replicas`, 'success');
+                r3FetchCluster();
+                r3FetchAlerts();
+            } catch (e) { alert('Round 3 service offline (port 4002)'); }
+        }
+
+        // Poll Round 3 API every 3 seconds
+        function r3Poll() {
+            r3FetchSLO();
+            r3FetchCluster();
+            r3FetchAlerts();
+        }
+        r3Poll();
+        setInterval(r3Poll, 3000);
+
+        // ═══════════════════════════════════════════════════════
+        // ROUND 4 — Security & Compliance
+        // ═══════════════════════════════════════════════════════
+
+        const R4_API = 'http://localhost:4003';
+        let r4LogFilter = '';
+        let r4ActiveScanId = null;
+
+        // ── Pipeline Stage Renderer ──────────────────────────
+        (function buildPipeline() {
+            const stages = [
+                { icon: '📥', label: 'Git Push', color: '#58a6ff', tools: ['pre-commit', 'gitleaks'] },
+                { icon: '🔍', label: 'SAST', color: '#79c0ff', tools: ['SonarQube', 'Snyk Code'] },
+                { icon: '📦', label: 'Build & SBOM', color: '#a5d6ff', tools: ['Docker', 'Syft'] },
+                { icon: '🧪', label: 'SCA / Trivy', color: '#ffa657', tools: ['Trivy', 'Grype'] },
+                { icon: '🚀', label: 'Deploy Staging', color: '#3fb950', tools: ['Helm', 'ArgoCD'] },
+                { icon: '🌐', label: 'DAST', color: '#d29922', tools: ['OWASP ZAP'] },
+                { icon: '✅', label: 'Prod Gate', color: '#3fb950', tools: ['Quality Gate'] },
+            ];
+            const container = document.getElementById('pipeline-stages');
+            if (!container) return;
+            stages.forEach((s, i) => {
+                const el = document.createElement('div');
+                el.style.cssText = 'display:flex; align-items:center; gap:0;';
+                el.innerHTML = `
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:0.4rem; padding:0.75rem 1rem; background:#0d1117; border-radius:8px; border:1px solid #21262d; min-width:110px; text-align:center;">
+                        <div style="font-size:1.5rem;">${s.icon}</div>
+                        <div style="font-size:0.8rem; font-weight:600; color:${s.color};">${s.label}</div>
+                        <div style="font-size:0.65rem; color:var(--text-dim);">${s.tools.join(' · ')}</div>
+                    </div>
+                    ${i < stages.length - 1 ? `<div style="width:24px; height:2px; background: linear-gradient(90deg, ${s.color}, #21262d); flex-shrink:0;"></div>` : ''}`;
+                container.appendChild(el);
+            });
+        })();
+
+        // ── PCI-DSS Compliance ───────────────────────────────
+        async function r4FetchCompliance() {
+            try {
+                const data = await fetch(R4_API + '/compliance').then(r => r.json());
+
+                // Score ring
+                const score = data.score;
+                const ring = document.getElementById('pci-ring');
+                const display = document.getElementById('pci-score-display');
+                const summary = document.getElementById('pci-summary');
+                if (ring) {
+                    const offset = 345.4 * (1 - score / 100);
+                    ring.style.strokeDashoffset = offset;
+                    ring.style.stroke = score >= 90 ? 'var(--success)' : score >= 70 ? 'var(--warning)' : 'var(--danger)';
+                }
+                if (display) {
+                    display.innerText = score + '%';
+                    display.style.color = score >= 90 ? 'var(--success)' : score >= 70 ? 'var(--warning)' : 'var(--danger)';
+                }
+                if (summary) {
+                    summary.innerText = `${data.summary.pass} passed · ${data.summary.warn} warnings · ${data.summary.fail} failures`;
+                }
+
+                // Controls grid
+                const ctrl = document.getElementById('pci-controls');
+                if (!ctrl) return;
+                ctrl.innerHTML = '';
+                data.controls.forEach(c => {
+                    const color = c.status === 'PASS' ? 'var(--success)' : c.status === 'WARN' ? 'var(--warning)' : 'var(--danger)';
+                    const icon = c.status === 'PASS' ? '✓' : c.status === 'WARN' ? '⚠' : '✗';
+                    const el = document.createElement('div');
+                    el.style.cssText = `background:#0d1117; border-radius:6px; padding:0.5rem 0.75rem; border:1px solid ${color}33; border-left:3px solid ${color}; font-size:0.75rem;`;
+                    el.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.2rem;">
+                            <span style="color:${color}; font-weight:600;">${icon} ${c.id}</span>
+                            <span style="color:var(--text-dim); font-size:0.65rem;">${c.category}</span>
+                        </div>
+                        <div style="color:#fff; margin-bottom:0.2rem;">${c.title}</div>
+                        <div style="color:var(--text-dim); font-size:0.65rem; line-height:1.3;">${c.detail}</div>`;
+                    ctrl.appendChild(el);
+                });
+            } catch (e) { }
+        }
+
+        // ── PMLA Audit Logs ──────────────────────────────────
+        async function r4FetchLogs(filter) {
+            try {
+                const url = R4_API + '/audit-logs?limit=25' + (filter ? `&severity=${filter}` : '');
+                const logs = await fetch(url).then(r => r.json());
+                const container = document.getElementById('audit-log-stream');
+                if (!container) return;
+                container.innerHTML = '';
+                logs.forEach(log => {
+                    const sevColor = log.severity === 'HIGH' ? 'var(--danger)' : log.severity === 'MEDIUM' ? 'var(--warning)' : 'var(--text-dim)';
+                    const statusColor = log.status === 'SUCCESS' ? 'var(--success)' : 'var(--danger)';
+                    const time = new Date(log.timestamp).toLocaleTimeString();
+                    const el = document.createElement('div');
+                    el.style.cssText = `padding:0.4rem 0.6rem; background:#0d1117; border-radius:4px; border-left:2px solid ${sevColor}; display:flex; justify-content:space-between; gap:0.5rem; align-items:flex-start;`;
+                    el.innerHTML = `
+                        <div style="flex:1; min-width:0;">
+                            <span style="color:${sevColor}; font-weight:600;">[${log.severity}]</span>
+                            <span style="color:var(--accent)"> ${log.action}</span>
+                            <span style="color:var(--text-dim)"> · ${log.user_id} · ${log.source_ip}</span>
+                            ${log.masked ? `<span style="color:var(--danger); font-size:0.65rem;"> 🔒PCI</span>` : ''}
+                            <div style="color:#555; font-size:0.65rem; margin-top:1px;">${log.request_id} · ${log.change_diff.slice(0, 50)}</div>
+                        </div>
+                        <div style="white-space:nowrap; text-align:right;">
+                            <div style="color:${statusColor}; font-size:0.65rem;">${log.status}</div>
+                            <div style="color:#555; font-size:0.6rem;">${time}</div>
+                        </div>`;
+                    container.appendChild(el);
+                });
+            } catch (e) { }
+        }
+
+        function r4FilterLogs(sev) {
+            r4LogFilter = sev;
+            r4FetchLogs(sev);
+        }
+
+        // ── Security Scanner ─────────────────────────────────
+        const SCAN_STEP_LABELS = [
+            'Running gitleaks secrets scan...',
+            'SAST: SonarQube static analysis...',
+            'Building Docker image...',
+            'SCA: Trivy image vulnerability scan...',
+            'DAST: OWASP ZAP staging scan...',
+            'Generating SBOM with Syft...',
+            'Finalizing report...',
+        ];
+
+        async function r4StartScan() {
+            const btn = document.getElementById('scan-btn');
+            const badge = document.getElementById('scan-badge');
+            const wrap = document.getElementById('scan-progress-wrap');
+            const findings = document.getElementById('scan-findings');
+
+            btn.disabled = true;
+            btn.innerText = '⏳ Scanning...';
+            badge.style.display = 'inline-block';
+            badge.innerText = 'RUNNING';
+            badge.className = 'pill pill-warning';
+            wrap.style.display = 'block';
+            findings.innerHTML = '';
+
+            try {
+                const res = await fetch(R4_API + '/scan', { method: 'POST', body: '{}', headers: { 'Content-Type': 'application/json' } });
+                const job = await res.json();
+                r4ActiveScanId = job.scan_id;
+                addLog('[Security] 🔍 Security scan started', 'info');
+                r4PollScan();
+            } catch (e) {
+                btn.disabled = false;
+                btn.innerText = '🔍 Run Full Scan';
+                alert('Round 4 service offline (port 4003)');
+            }
+        }
+
+        async function r4PollScan() {
+            if (!r4ActiveScanId) return;
+            try {
+                const job = await fetch(R4_API + '/scan/' + r4ActiveScanId).then(r => r.json());
+
+                // Update progress
+                const bar = document.getElementById('scan-progress-bar');
+                const pct = document.getElementById('scan-pct');
+                const label = document.getElementById('scan-step-label');
+                if (bar) bar.style.width = job.progress + '%';
+                if (pct) pct.innerText = job.progress + '%';
+                if (label) label.innerText = SCAN_STEP_LABELS[Math.min(Math.floor(job.progress / 17), SCAN_STEP_LABELS.length - 1)];
+
+                // Render findings
+                const findingsEl = document.getElementById('scan-findings');
+                if (findingsEl && job.findings.length > 0) {
+                    findingsEl.innerHTML = '';
+                    job.findings.forEach(f => {
+                        const color = f.severity === 'CRITICAL' ? 'var(--danger)' : f.severity === 'HIGH' ? '#ff7b72' : f.severity === 'MEDIUM' ? 'var(--warning)' : 'var(--text-dim)';
+                        const el = document.createElement('div');
+                        el.style.cssText = `padding:0.5rem 0.75rem; background:#0d1117; border-radius:5px; border-left:3px solid ${color}; font-size:0.8rem;`;
+                        el.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.2rem;">
+                                <span style="color:${color}; font-weight:600;">${f.severity}</span>
+                                <span style="color:var(--text-dim); font-size:0.7rem;">${f.tool}${f.cve ? ' · ' + f.cve : ''}</span>
+                            </div>
+                            <div style="color:#fff;">${f.title}</div>
+                            <div style="color:var(--text-dim); font-size:0.72rem; margin-top:0.2rem;">${f.desc}</div>`;
+                        findingsEl.appendChild(el);
+                    });
+                }
+
+                if (job.status === 'COMPLETE') {
+                    const btn = document.getElementById('scan-btn');
+                    const badge = document.getElementById('scan-badge');
+                    btn.disabled = false;
+                    btn.innerText = '🔍 Run Full Scan';
+                    badge.innerText = 'DONE';
+                    badge.className = 'pill pill-success';
+                    const critical = job.findings.filter(f => f.severity === 'CRITICAL' || f.severity === 'HIGH').length;
+                    addLog(`[Security] Scan complete — ${job.findings.length} findings (${critical} critical/high)`, critical > 0 ? 'error' : 'success');
+                    r4ActiveScanId = null;
+                } else {
+                    setTimeout(r4PollScan, 1000);
+                }
+            } catch (e) { }
+        }
+
+        // ── Bootstrap Round 4 — defer until DOM ready & retry every 5s ──
+        let r4Initialized = false;
+        function r4Init() {
+            if (r4Initialized) return;
+            const el = document.getElementById('pci-controls');
+            if (!el) return;
+            r4Initialized = true;
+            r4FetchCompliance();
+            r4FetchLogs('');
+            setInterval(() => r4FetchLogs(r4LogFilter), 4000);
+        }
+
+        // Also expose buildPipeline as idempotent function for tab switch
+        let pipelineBuilt = false;
+        function buildPipelineOnce() {
+            if (pipelineBuilt) return;
+            const container = document.getElementById('pipeline-stages');
+            if (!container || container.children.length > 0) { pipelineBuilt = true; return; }
+            const stages = [
+                { icon: '📥', label: 'Git Push', color: '#58a6ff', tools: ['pre-commit', 'gitleaks'] },
+                { icon: '🔍', label: 'SAST', color: '#79c0ff', tools: ['SonarQube', 'Snyk Code'] },
+                { icon: '📦', label: 'Build & SBOM', color: '#a5d6ff', tools: ['Docker', 'Syft'] },
+                { icon: '🧪', label: 'SCA / Trivy', color: '#ffa657', tools: ['Trivy', 'Grype'] },
+                { icon: '🚀', label: 'Deploy Staging', color: '#3fb950', tools: ['Helm', 'ArgoCD'] },
+                { icon: '🌐', label: 'DAST', color: '#d29922', tools: ['OWASP ZAP'] },
+                { icon: '✅', label: 'Prod Gate', color: '#3fb950', tools: ['Quality Gate'] },
+            ];
+            stages.forEach((s, i) => {
+                const el = document.createElement('div');
+                el.style.cssText = 'display:flex; align-items:center; gap:0;';
+                el.innerHTML = `
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:0.4rem;padding:0.75rem 1rem;background:#0d1117;border-radius:8px;border:1px solid #21262d;min-width:110px;text-align:center;">
+                        <div style="font-size:1.5rem;">${s.icon}</div>
+                        <div style="font-size:0.8rem;font-weight:600;color:${s.color};">${s.label}</div>
+                        <div style="font-size:0.65rem;color:var(--text-dim);">${s.tools.join(' · ')}</div>
+                    </div>
+                    ${i < stages.length - 1 ? `<div style="width:24px;height:2px;background:linear-gradient(90deg,${s.color},#21262d);flex-shrink:0;"></div>` : ''}`;
+                container.appendChild(el);
+            });
+            pipelineBuilt = true;
+        }
+
+        // Run on load and when tab becomes active
+        window.addEventListener('load', () => { r4Init(); buildPipelineOnce(); });
+        setTimeout(() => { r4Init(); buildPipelineOnce(); }, 500);
+    </script>
+</body>
+
+</html>

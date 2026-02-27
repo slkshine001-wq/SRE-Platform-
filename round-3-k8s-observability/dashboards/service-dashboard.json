@@ -1,0 +1,47 @@
+{
+    "title": "User Metadata Service Dashboard",
+    "panels": [
+        {
+            "title": "Request Throughput",
+            "type": "graph",
+            "targets": [
+                {
+                    "expr": "rate(total_requests[1m])"
+                }
+            ]
+        },
+        {
+            "title": "Error Rate",
+            "type": "graph",
+            "targets": [
+                {
+                    "expr": "rate(failure_count[1m]) / rate(total_requests[1m])"
+                }
+            ]
+        },
+        {
+            "title": "Latency (p50, p95, p99)",
+            "type": "graph",
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.50, sum(rate(request_latency_ms_bucket[5m])) by (le))"
+                },
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(request_latency_ms_bucket[5m])) by (le))"
+                },
+                {
+                    "expr": "histogram_quantile(0.99, sum(rate(request_latency_ms_bucket[5m])) by (le))"
+                }
+            ]
+        },
+        {
+            "title": "CPU Usage",
+            "type": "graph",
+            "targets": [
+                {
+                    "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container='user-metadata-service'})"
+                }
+            ]
+        }
+    ]
+}

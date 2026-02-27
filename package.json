@@ -1,0 +1,19 @@
+{
+    "name": "unio-platform",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Unio Platform SRE Showcase Monorepo",
+    "workspaces": [
+        "round-1-user-service",
+        "round-2-platform-portal",
+        "round-3-k8s-observability",
+        "round-4-security-design"
+    ],
+    "scripts": {
+        "start:all": "concurrently \"npm run start --workspace=round-1-user-service\" \"npm run start --workspace=round-2-platform-portal\" \"npm run start --workspace=round-3-k8s-observability\" \"npm run start --workspace=round-4-security-design\" \"cd showcase-portal && npx live-server --port=8080 .\"",
+        "clean": "rm -rf node_modules round-*/node_modules round-*/dist"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}

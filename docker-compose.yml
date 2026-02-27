@@ -1,0 +1,129 @@
+version: '3.8'
+
+# ══════════════════════════════════════════════════════════════
+# Unio — Platform SRE Showcase
+# All services: docker-compose up --build
+# Dashboard:    http://localhost:8080
+# ══════════════════════════════════════════════════════════════
+
+networks:
+  unio-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
+
+
+services:
+
+  # ─── MySQL (optional — used by Round 1 when DB_HOST is set) ───
+  mysql:
+    image: mysql:8.0
+    container_name: unio-mysql
+    networks: [ unio-net ]
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: user_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-ppassword" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ─── Round 1: User Metadata Service (port 54321) ─────────────
+  user-service:
+    build:
+      context: ./round-1-user-service
+      dockerfile: Dockerfile
+    container_name: unio-user-service
+    networks: [ unio-net ]
+    ports:
+      - "54321:54321"
+    environment:
+      PORT: "54321"
+      DB_HOST: mysql
+      DB_NAME: user_db
+      DB_USER: root
+      DB_PASS: password
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost:54321/metrics" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # ─── Round 2: IDP Backend (port 4001) ────────────────────────
+  idp-service:
+    build:
+      context: ./round-2-platform-portal
+      dockerfile: Dockerfile
+    container_name: unio-idp-service
+    networks: [ unio-net ]
+    ports:
+      - "4001:4001"
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost:4001/dashboard" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ─── Round 3: K8s Topology & SLO API (port 4002) ─────────────
+  k8s-slo-service:
+    build:
+      context: ./round-3-k8s-observability
+      dockerfile: Dockerfile
+    container_name: unio-k8s-slo
+    networks: [ unio-net ]
+    ports:
+      - "4002:4002"
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost:4002/slo" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ─── Round 4: Security & Compliance API (port 4003) ──────────
+  security-service:
+    build:
+      context: ./round-4-security-design
+      dockerfile: Dockerfile
+    container_name: unio-security
+    networks: [ unio-net ]
+    ports:
+      - "4003:4003"
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost:4003/compliance" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ─── Showcase Dashboard (port 8080) ──────────────────────────
+  dashboard:
+    build:
+      context: ./showcase-portal
+      dockerfile: Dockerfile
+    container_name: unio-dashboard
+    networks: [ unio-net ]
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - idp-service
+      - k8s-slo-service
+      - security-service
+    restart: on-failure

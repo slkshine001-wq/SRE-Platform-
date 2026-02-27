@@ -1,0 +1,23 @@
+apiVersion: v2
+name: unio
+description: Unio — Platform SRE Showcase Umbrella Helm Chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: user-service
+    version: "1.0.0"
+    repository: "file://./charts/user-service"
+  - name: idp-service
+    version: "1.0.0"
+    repository: "file://./charts/idp-service"
+  - name: k8s-slo-service
+    version: "1.0.0"
+    repository: "file://./charts/k8s-slo-service"
+  - name: security-service
+    version: "1.0.0"
+    repository: "file://./charts/security-service"
+  - name: dashboard
+    version: "1.0.0"
+    repository: "file://./charts/dashboard"

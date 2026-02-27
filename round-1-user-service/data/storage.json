@@ -1,0 +1,20 @@
+{
+  "users": {
+    "u_stateful": {
+      "user_id": "u_stateful",
+      "name": "Stateful User",
+      "email": "persist@example.com",
+      "phone": "999",
+      "created_at": "2026-02-25T20:23:44.838Z"
+    }
+  },
+  "idempotency": {
+    "key_p_1": {
+      "user_id": "u_stateful",
+      "name": "Stateful User",
+      "email": "persist@example.com",
+      "phone": "999",
+      "created_at": "2026-02-25T20:23:44.838Z"
+    }
+  }
+}
